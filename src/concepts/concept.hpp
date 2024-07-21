@@ -27,6 +27,11 @@ namespace tabiya {
 
     template<typename T>
     concept IsSigned = std::signed_integral<T>;
+
+    template<typename T>
+    concept Dereferenceable = requires(T a) {
+            { *a };
+    };
 } // tabiya
 
 #endif //CONCEPT_HPP

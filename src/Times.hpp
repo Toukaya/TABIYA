@@ -4,6 +4,7 @@
 
 #ifndef TIMES_HPP
 #define TIMES_HPP
+#include "IterWrapper.hpp"
 #include "concepts/concept.hpp"
 
 namespace tabiya {
@@ -19,34 +20,14 @@ namespace tabiya {
             }
         }
 
-        class Iterator {
-        public:
-            explicit Iterator(T position) : _position(position) {
-            }
+        using Iter = IterWrapper<T, DefaultIncrementor<T>, decltype([](T value) {return value;})>;
 
-            T operator*() const {
-                return _position;
-            }
-
-            Iterator& operator++() {
-                ++_position;
-                return *this;
-            }
-
-            bool operator!=(const Iterator&other) const {
-                return _position != other._position;
-            }
-
-        private:
-            T _position;
-        };
-
-        Iterator begin() const {
-            return Iterator(0);
+        Iter begin() const {
+            return Iter{0};
         }
 
-        Iterator end() const {
-            return Iterator(_count);
+        Iter end() const {
+            return Iter{_count};
         }
 
     private:
