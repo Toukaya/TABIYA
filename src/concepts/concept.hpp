@@ -32,6 +32,17 @@ namespace tabiya {
     concept Dereferenceable = requires(T a) {
             { *a };
     };
+
+    template<typename T>
+    concept PrefixIncrementable = requires(T a) {
+        { ++a } -> std::same_as<T&>;
+    };
+
+    template<typename T>
+    concept PostfixIncrementable = requires(T a) {
+        { a++ } -> std::same_as<T>;
+    };
+
 } // tabiya
 
 #endif //CONCEPT_HPP

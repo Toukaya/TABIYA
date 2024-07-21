@@ -14,28 +14,23 @@ namespace tabiya {
 
     struct NoDestructor { ~NoDestructor() = delete; };
 
-    template<Addable T>
+    template<typename  T>
+    requires PrefixIncrementable<T> || PostfixIncrementable<T>
     struct DefaultIncrementor final : NoConstructor, NoDestructor {
-        void operator()(T& value) const {
-            ++value;
-        }
+        decltype(auto) operator()(T& value) const { return ++value; }
     };
 
     template<Dereferenceable T>
     struct DefaultDereferencer final : NoConstructor, NoDestructor {
-        void operator()(T& value) const {
-            return *value;
-        }
+        decltype(auto) operator()(T& value) const { return *value; }
     };
 
     template<Equalable T>
     struct DefaultComparator final : NoConstructor, NoDestructor {
-        void operator()(T& value, T& other) const {
-            return value != other;
-        }
+        decltype(auto) operator()(T& value, T& other) const { return value != other; }
     };
 
-    template <template <typename> class Temp, typename T>
+    template <template <typename> class , typename >
     struct is_instance_of : std::false_type {};
 
     template <template <typename> class Temp, typename T>
@@ -59,7 +54,7 @@ namespace tabiya {
     public:
         explicit IterWrapper(T position) : _position(position) {}
 
-        auto operator*() {
+        decltype(auto) operator*() {
             if constexpr (is_instance_of_v<DefaultDereferencer, Dereferencer>) {
                 return *_position;
             } else {
@@ -82,6 +77,14 @@ namespace tabiya {
             } else {
                 return Comparator{}(_position, other._position);
             }
+        }
+
+        auto next() -> IterWrapper& {
+            return ++(*this);
+        }
+
+        auto source() -> decltype(auto) {
+            return *(*this);
         }
 
     private:
