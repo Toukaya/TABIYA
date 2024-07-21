@@ -52,6 +52,11 @@ namespace tabiya {
              std::is_invocable_v<Comparator, T&, T&>
     class IterWrapper {
     public:
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = std::remove_cvref_t<decltype(Dereferencer{}(std::declval<T&>()))>;
+        using pointer = value_type*;
+        using reference = value_type&;
+
         explicit IterWrapper(T position) : _position(position) {}
 
         decltype(auto) operator*() {
