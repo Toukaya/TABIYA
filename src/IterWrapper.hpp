@@ -9,23 +9,32 @@
 
 namespace tabiya {
 
-    // Default incrementor
-    template<Addable T>
-    struct DefaultIncrementor {
-        void operator()(T& position) const { ++position; }
+    template<Addable>
+    struct DefaultIncrementor final {
+        DefaultIncrementor() = delete;
+        ~DefaultIncrementor() = delete;
     };
 
-    // Default dereferencer
-    template<Dereferenceable T>
-    struct DefaultDereferencer {
-        auto operator()(T& position) const -> decltype(*position) { return *position; }
+    template<Dereferenceable>
+    struct DefaultDereferencer final {
+        DefaultDereferencer() = delete;
+        ~DefaultDereferencer() = delete;
     };
 
-    // Default comparator
-    template<Equalable T>
-    struct DefaultComparator {
-        bool operator()(const T& lhs, const T& rhs) const { return lhs != rhs; }
+    template<Equalable>
+    struct DefaultComparator final {
+        DefaultComparator() = delete;
+        ~DefaultComparator() = delete;
     };
+
+    template <template <typename> class Temp, typename T>
+    struct is_instance_of : std::false_type {};
+
+    template <template <typename> class Temp, typename T>
+    struct is_instance_of<Temp, Temp<T>> : std::true_type {};
+
+    template <template <typename> class Temp, typename T>
+    inline constexpr bool is_instance_of_v = is_instance_of<Temp, T>::value;
 
     template<
         typename T,
@@ -37,26 +46,32 @@ namespace tabiya {
     public:
         explicit IterWrapper(T position) : position(position) {}
 
-        IterWrapper(T position, Incrementor inc, Dereferencer deref, Comparator cmp)
-            : position(position), incrementor(inc), dereferencer(deref), comparator(cmp) {}
-
-        T operator*() {
-            return dereferencer(position);
+        auto operator*() {
+            if constexpr (is_instance_of_v<DefaultDereferencer, Dereferencer>) {
+                return *position;
+            } else {
+                return Dereferencer{}(position);
+            }
         }
 
         IterWrapper& operator++() {
-            incrementor(position);
+            if constexpr (is_instance_of_v<DefaultIncrementor, Incrementor>) {
+                ++position;
+            } else {
+                Incrementor{}(position);
+            }
             return *this;
         }
 
         bool operator!=(const IterWrapper& other) const {
-            return comparator(position, other.position);
+            if constexpr (is_instance_of_v<DefaultComparator, Comparator>) {
+                return position != other.position;
+            } else {
+                return Comparator{}(position, other.position);
+            }
         }
     private:
         T position;
-        Incrementor incrementor;
-        Dereferencer dereferencer;
-        Comparator comparator;
     };
 } // tabiya
 

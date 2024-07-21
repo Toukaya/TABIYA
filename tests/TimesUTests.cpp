@@ -1,8 +1,8 @@
 //
 // Created by Touka on 7/21/24.
 //
-
-#include <catch2/catch_test_macros.hpp>
+#define CATCH_CONFIG_RUNNER
+#include <catch2/catch_all.hpp>
 #include "../src/Times.hpp"
 
 using namespace tabiya;
@@ -45,4 +45,12 @@ TEST_CASE("Times with negative count behaves as zero count using unsign int", "[
         ++count;
     }
     REQUIRE(count == 5);
+}
+
+int main(int argc, char* argv[]) {
+    Catch::Session session;
+
+    int result = session.run(argc, argv);
+
+    return result;
 }
