@@ -9,22 +9,30 @@
 
 namespace tabiya {
 
-    template<Addable>
-    struct DefaultIncrementor final {
-        DefaultIncrementor() = delete;
-        ~DefaultIncrementor() = delete;
+#pragma region Default Concepts
+    struct NoConstructor { NoConstructor() = delete; };
+
+    struct NoDestructor { ~NoDestructor() = delete; };
+
+    template<Addable T>
+    struct DefaultIncrementor final : NoConstructor, NoDestructor {
+        void operator()(T& value) const {
+            ++value;
+        }
     };
 
-    template<Dereferenceable>
-    struct DefaultDereferencer final {
-        DefaultDereferencer() = delete;
-        ~DefaultDereferencer() = delete;
+    template<Dereferenceable T>
+    struct DefaultDereferencer final : NoConstructor, NoDestructor {
+        void operator()(T& value) const {
+            return *value;
+        }
     };
 
-    template<Equalable>
-    struct DefaultComparator final {
-        DefaultComparator() = delete;
-        ~DefaultComparator() = delete;
+    template<Equalable T>
+    struct DefaultComparator final : NoConstructor, NoDestructor {
+        void operator()(T& value, T& other) const {
+            return value != other;
+        }
     };
 
     template <template <typename> class Temp, typename T>
@@ -36,42 +44,48 @@ namespace tabiya {
     template <template <typename> class Temp, typename T>
     inline constexpr bool is_instance_of_v = is_instance_of<Temp, T>::value;
 
+#pragma endregion
+
     template<
         typename T,
         typename Incrementor = DefaultIncrementor<T>,
         typename Dereferencer = DefaultDereferencer<T>,
         typename Comparator = DefaultComparator<T>
     >
+    requires std::is_invocable_v<Incrementor, T&> &&
+             std::is_invocable_v<Dereferencer, T&> &&
+             std::is_invocable_v<Comparator, T&, T&>
     class IterWrapper {
     public:
-        explicit IterWrapper(T position) : position(position) {}
+        explicit IterWrapper(T position) : _position(position) {}
 
         auto operator*() {
             if constexpr (is_instance_of_v<DefaultDereferencer, Dereferencer>) {
-                return *position;
+                return *_position;
             } else {
-                return Dereferencer{}(position);
+                return Dereferencer{}(_position);
             }
         }
 
         IterWrapper& operator++() {
             if constexpr (is_instance_of_v<DefaultIncrementor, Incrementor>) {
-                ++position;
+                ++_position;
             } else {
-                Incrementor{}(position);
+                Incrementor{}(_position);
             }
             return *this;
         }
 
         bool operator!=(const IterWrapper& other) const {
             if constexpr (is_instance_of_v<DefaultComparator, Comparator>) {
-                return position != other.position;
+                return _position != other._position;
             } else {
-                return Comparator{}(position, other.position);
+                return Comparator{}(_position, other._position);
             }
         }
+
     private:
-        T position;
+        T _position;
     };
 } // tabiya
 
