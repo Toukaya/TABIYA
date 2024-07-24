@@ -59,7 +59,7 @@ namespace tabiya {
 
         explicit IterWrapper(T position) : _position(position) {}
 
-        decltype(auto) operator*() {
+        auto operator*() -> decltype(auto) {
             if constexpr (is_instance_of_v<DefaultDereferencer, Dereferencer>) {
                 return *_position;
             } else {
@@ -67,7 +67,7 @@ namespace tabiya {
             }
         }
 
-        IterWrapper& operator++() {
+        auto operator++() -> IterWrapper& {
             if constexpr (is_instance_of_v<DefaultIncrementor, Incrementor>) {
                 ++_position;
             } else {

@@ -17,7 +17,8 @@ endif()
 add_library(${PROJECT_NAME} INTERFACE
         src/Times.hpp
         src/concepts/concept.hpp
-        src/IterWrapper.hpp)
+        src/IterWrapper.hpp
+        src/Range.hpp)
 
 target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
 

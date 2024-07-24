@@ -43,6 +43,9 @@ namespace tabiya {
         { a++ } -> std::same_as<T>;
     };
 
+    template<typename T>
+    concept Numeric = std::is_arithmetic_v<T>;
+
 } // tabiya
 
 #endif //CONCEPT_HPP
