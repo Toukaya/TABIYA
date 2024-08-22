@@ -23,11 +23,11 @@ namespace tabiya {
 
         using Iter = IterWrapper<T, DefaultIncrementor<T>, decltype([](T value) {return value;})>;
 
-        Iter begin() const {
+        auto begin() const -> Iter {
             return Iter{0};
         }
 
-        Iter end() const {
+        auto end() const -> Iter {
             return Iter{_count};
         }
 

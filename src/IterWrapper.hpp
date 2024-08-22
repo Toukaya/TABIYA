@@ -10,24 +10,27 @@
 namespace tabiya {
 
 #pragma region Default Concepts
-    struct NoConstructor { NoConstructor() = delete; };
-
-    struct NoDestructor { ~NoDestructor() = delete; };
 
     template<typename  T>
     requires PrefixIncrementable<T> || PostfixIncrementable<T>
-    struct DefaultIncrementor final : NoConstructor, NoDestructor {
-        decltype(auto) operator()(T& value) const { return ++value; }
+    struct DefaultIncrementor final {
+        auto operator()(T& value) const -> decltype(++value) { return ++value; }
     };
 
-    template<Dereferenceable T>
-    struct DefaultDereferencer final : NoConstructor, NoDestructor {
-        decltype(auto) operator()(T& value) const { return *value; }
+    template<typename T>
+    struct DefaultDereferencer {
+        auto operator()(T &value) const -> decltype(*value) requires Dereferenceable<T> && !IsIntegral<T> {
+            return *value;
+        }
+
+        auto operator()(T &value) const -> decltype(value) requires IsIntegral<T> {
+            return value;
+        }
     };
 
     template<Equalable T>
-    struct DefaultComparator final : NoConstructor, NoDestructor {
-        decltype(auto) operator()(T& value, T& other) const { return value != other; }
+    struct DefaultComparator final {
+        auto operator()(T& value, T& other) const -> bool { return value != other; }
     };
 
     template <template <typename> class , typename >
@@ -67,7 +70,7 @@ namespace tabiya {
             }
         }
 
-        auto operator++() -> IterWrapper& {
+        auto operator++() -> decltype(*this) {
             if constexpr (is_instance_of_v<DefaultIncrementor, Incrementor>) {
                 ++_position;
             } else {
@@ -84,7 +87,7 @@ namespace tabiya {
             }
         }
 
-        auto next() -> IterWrapper& {
+        auto next() -> decltype(++*this) {
             return ++(*this);
         }
 

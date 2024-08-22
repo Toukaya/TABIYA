@@ -26,9 +26,6 @@ namespace tabiya {
     };
 
     template<typename T>
-    concept IsSigned = std::signed_integral<T>;
-
-    template<typename T>
     concept Dereferenceable = requires(T a) {
             { *a };
     };
@@ -45,6 +42,15 @@ namespace tabiya {
 
     template<typename T>
     concept Numeric = std::is_arithmetic_v<T>;
+
+    template<typename T>
+    concept IsSigned = std::signed_integral<T>;
+
+    template<typename T>
+    concept IsUnsigned = std::unsigned_integral<T>;
+
+    template<typename T>
+    concept IsIntegral = std::is_integral_v<T>;
 
 } // tabiya
 

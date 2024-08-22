@@ -18,12 +18,12 @@ namespace tabiya {
 
         using Iter = IterWrapper<T, Incrementor, Dereferencer, Comparator>;
 
-        auto from(T start) -> Range& {
+        auto from(T start) -> decltype(*this) {
             _curr = Iter(start);
             return *this;
         }
 
-        auto to(T end) -> Range& {
+        auto to(T end) -> decltype(*this) {
             _end = Iter(end);
             return *this;
         }
