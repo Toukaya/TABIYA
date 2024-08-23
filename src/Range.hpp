@@ -18,6 +18,10 @@ namespace tabiya {
 
         using Iter = IterWrapper<T, Incrementor, Dereferencer, Comparator>;
 
+        Range() : _curr(T{}), _end(T{}) {}
+
+        explicit Range(const Iter &begin, const Iter &end) : _curr(begin), _end(end) {}
+
         auto from(T start) -> decltype(*this) {
             _curr = Iter(start);
             return *this;

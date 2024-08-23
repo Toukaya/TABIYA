@@ -12,7 +12,7 @@ SCENARIO("Range iterates over a range of integers correctly") {
         WHEN("Iterated over") {
             std::vector<int> results;
             for (auto it: tabiya::Range<int>{}.from(1).to(4)) {
-                results.push_back(*it);
+                results.push_back(it);
             }
 
             THEN("The results contain all numbers in the range") {
@@ -28,7 +28,7 @@ SCENARIO("Range handles empty ranges correctly") {
         emptyRange.from(5).to(5);
 
         WHEN("Checked if the range is empty by comparing begin and end iterators") {
-            bool isEmpty = (emptyRange.begin() == emptyRange.end());
+            bool isEmpty = !(emptyRange.begin() != emptyRange.end());
 
             THEN("The range is considered empty") {
                 REQUIRE(isEmpty);

@@ -19,12 +19,12 @@ namespace tabiya {
 
     template<typename T>
     struct DefaultDereferencer {
-        auto operator()(T &value) const -> decltype(*value) requires Dereferenceable<T> && !IsIntegral<T> {
-            return *value;
-        }
-
-        auto operator()(T &value) const -> decltype(value) requires IsIntegral<T> {
-            return value;
+        auto operator()(T &value) const {
+            if constexpr (Dereferenceable<T> && !IsIntegral<T>) {
+                return *value;
+            } else if constexpr (IsIntegral<T>) {
+                return value;
+            }
         }
     };
 
@@ -63,7 +63,7 @@ namespace tabiya {
         explicit IterWrapper(T position) : _position(position) {}
 
         auto operator*() -> decltype(auto) {
-            if constexpr (is_instance_of_v<DefaultDereferencer, Dereferencer>) {
+            if constexpr (Dereferenceable<T>) {
                 return *_position;
             } else {
                 return Dereferencer{}(_position);
