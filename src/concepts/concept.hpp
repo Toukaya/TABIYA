@@ -20,10 +20,17 @@ namespace tabiya {
     concept AddSubtractable = Addable<T> && Subtractable<T>;
 
     template<typename T>
-    concept Equalable = requires(T a, T b) {
-        { a == b } -> std::convertible_to<bool>;
-        { a != b } -> std::convertible_to<bool>;
+    concept EqualityComparable = requires(T a, T b) {
+        { a == b } -> std::same_as<bool>;
     };
+
+    template<typename T>
+    concept InequalityComparable = requires(T a, T b) {
+        { a != b } -> std::same_as<bool>;
+    };
+
+    template<typename T>
+    concept Equalable = EqualityComparable<T> && InequalityComparable<T>;
 
     template<typename T>
     concept Dereferenceable = requires(T a) {

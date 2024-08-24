@@ -11,7 +11,7 @@ namespace tabiya {
         typename T,
         typename Incrementor = DefaultIncrementor<T>,
         typename Dereferencer = DefaultDereferencer<T>,
-        typename Comparator = DefaultComparator<T>
+        typename Comparator = DefaultEqualityComparator<T>
     >
     class Range {
     public:

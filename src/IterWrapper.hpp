@@ -14,13 +14,19 @@ namespace tabiya {
     template<typename  T>
     requires PrefixIncrementable<T> || PostfixIncrementable<T>
     struct DefaultIncrementor final {
-        auto operator()(T& value) const -> decltype(++value) { return ++value; }
+        auto operator()(T& value) const -> decltype(auto) {
+            if constexpr (PrefixIncrementable<T>)
+                return ++value;
+            else
+                return value++;
+        }
     };
 
     template<typename T>
+    requires Dereferenceable<T> || IsIntegral<T>
     struct DefaultDereferencer {
-        auto operator()(T &value) const {
-            if constexpr (Dereferenceable<T> && !IsIntegral<T>) {
+        auto operator()(T &value) const -> decltype(auto) {
+            if constexpr (Dereferenceable<T>) {
                 return *value;
             } else if constexpr (IsIntegral<T>) {
                 return value;
@@ -28,9 +34,9 @@ namespace tabiya {
         }
     };
 
-    template<Equalable T>
-    struct DefaultComparator final {
-        auto operator()(T& value, T& other) const -> bool { return value != other; }
+    template<EqualityComparable T>
+    struct DefaultEqualityComparator final {
+        auto operator()(T& value, T& other) const -> bool { return value == other; }
     };
 
     template <template <typename> class , typename >
@@ -40,7 +46,7 @@ namespace tabiya {
     struct is_instance_of<Temp, Temp<T>> : std::true_type {};
 
     template <template <typename> class Temp, typename T>
-    inline constexpr bool is_instance_of_v = is_instance_of<Temp, T>::value;
+    inline constexpr bool IsInstanceOf_v = is_instance_of<Temp, T>::value;
 
 #pragma endregion
 
@@ -48,11 +54,11 @@ namespace tabiya {
         typename T,
         typename Incrementor = DefaultIncrementor<T>,
         typename Dereferencer = DefaultDereferencer<T>,
-        typename Comparator = DefaultComparator<T>
+        typename EqualityComparator = DefaultEqualityComparator<T>
     >
     requires std::is_invocable_v<Incrementor, T&> &&
              std::is_invocable_v<Dereferencer, T&> &&
-             std::is_invocable_v<Comparator, T&, T&>
+             std::is_invocable_v<EqualityComparator, T&, T&>
     class IterWrapper {
     public:
         using iterator_category = std::forward_iterator_tag;
@@ -62,16 +68,20 @@ namespace tabiya {
 
         explicit IterWrapper(T position) : _position(position) {}
 
-        auto operator*() -> decltype(auto) {
-            if constexpr (Dereferenceable<T>) {
+        auto operator*() -> decltype(auto) requires Dereferenceable<T> {
+            if constexpr (IsInstanceOf_v<DefaultDereferencer, Dereferencer>) {
                 return *_position;
             } else {
                 return Dereferencer{}(_position);
             }
         }
 
+        auto operator*() -> Dereferencer requires (not Dereferenceable<T>) {
+            return Dereferencer{}(_position);
+        }
+
         auto operator++() -> decltype(*this) {
-            if constexpr (is_instance_of_v<DefaultIncrementor, Incrementor>) {
+            if constexpr (IsInstanceOf_v<DefaultIncrementor, Incrementor>) {
                 ++_position;
             } else {
                 Incrementor{}(_position);
@@ -80,10 +90,10 @@ namespace tabiya {
         }
 
         bool operator!=(const IterWrapper& other) const {
-            if constexpr (is_instance_of_v<DefaultComparator, Comparator>) {
+            if constexpr (IsInstanceOf_v<DefaultEqualityComparator, EqualityComparator>) {
                 return _position != other._position;
             } else {
-                return Comparator{}(_position, other._position);
+                return EqualityComparator{}(_position, other._position);
             }
         }
 
