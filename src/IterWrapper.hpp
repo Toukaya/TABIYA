@@ -25,7 +25,7 @@ namespace tabiya {
     template<typename T>
     requires Dereferenceable<T> || IsIntegral<T>
     struct DefaultDereferencer {
-        auto operator()(T &value) const -> decltype(auto) {
+        constexpr auto operator()(T &value) const -> decltype(auto) {
             if constexpr (Dereferenceable<T>) {
                 return *value;
             } else if constexpr (IsIntegral<T>) {
@@ -36,17 +36,14 @@ namespace tabiya {
 
     template<EqualityComparable T>
     struct DefaultEqualityComparator final {
-        auto operator()(T& value, T& other) const -> bool { return value == other; }
+        constexpr auto operator()(T& left, T& right) const -> bool { return left == right; }
     };
 
-    template <template <typename> class , typename >
-    struct is_instance_of : std::false_type {};
+    template <template <typename...> class Template, typename >
+    constexpr bool IsInstanceOf = false;
 
-    template <template <typename> class Temp, typename T>
-    struct is_instance_of<Temp, Temp<T>> : std::true_type {};
-
-    template <template <typename> class Temp, typename T>
-    inline constexpr bool IsInstanceOf_v = is_instance_of<Temp, T>::value;
+    template <template <typename...> class Template, typename... Args>
+    constexpr bool IsInstanceOf<Template, Template<Args...>> = true;
 
 #pragma endregion
 
@@ -69,19 +66,19 @@ namespace tabiya {
         explicit IterWrapper(T position) : _position(position) {}
 
         auto operator*() -> decltype(auto) requires Dereferenceable<T> {
-            if constexpr (IsInstanceOf_v<DefaultDereferencer, Dereferencer>) {
+            if constexpr (IsInstanceOf<DefaultDereferencer, Dereferencer>) {
                 return *_position;
             } else {
                 return Dereferencer{}(_position);
             }
         }
 
-        auto operator*() -> Dereferencer requires (not Dereferenceable<T>) {
+        auto operator*() -> decltype(auto) requires (not Dereferenceable<T>) {
             return Dereferencer{}(_position);
         }
 
         auto operator++() -> decltype(*this) {
-            if constexpr (IsInstanceOf_v<DefaultIncrementor, Incrementor>) {
+            if constexpr (IsInstanceOf<DefaultIncrementor, Incrementor>) {
                 ++_position;
             } else {
                 Incrementor{}(_position);
@@ -90,10 +87,10 @@ namespace tabiya {
         }
 
         bool operator!=(const IterWrapper& other) const {
-            if constexpr (IsInstanceOf_v<DefaultEqualityComparator, EqualityComparator>) {
+            if constexpr (IsInstanceOf<DefaultEqualityComparator, EqualityComparator>) {
                 return _position != other._position;
             } else {
-                return EqualityComparator{}(_position, other._position);
+                return not EqualityComparator{}(_position, other._position);
             }
         }
 
