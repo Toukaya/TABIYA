@@ -62,6 +62,7 @@ namespace tabiya {
         using value_type = std::remove_cvref_t<decltype(Dereferencer{}(std::declval<T&>()))>;
         using pointer = value_type*;
         using reference = value_type&;
+        using difference_type = std::ptrdiff_t;
 
         explicit IterWrapper(T position) : _position(position) {}
 
