@@ -41,6 +41,106 @@ SCENARIO("IterWrapper compares different iterators correctly") {
     }
 }
 
+SCENARIO("IterWrapper works with different container types") {
+    GIVEN("A list of integers") {
+        std::list<int> numbers = {10, 20, 30, 40};
+        tabiya::IterWrapper iter(numbers.begin());
+
+        WHEN("Incremented multiple times") {
+            ++iter;
+            ++iter;
+            auto value = *iter;
+
+            THEN("The value is the third element of the list") {
+                REQUIRE(value == 30);
+            }
+        }
+    }
+
+    GIVEN("A map of string to int") {
+        std::map<std::string, int> scores = {{"Alice", 90}, {"Bob", 85}, {"Charlie", 92}};
+        tabiya::IterWrapper iter(scores.begin());
+
+        WHEN("Dereferenced and accessed") {
+            auto pair = *iter;
+
+            THEN("The key-value pair is correctly accessed") {
+                REQUIRE(pair.first == "Alice");
+                REQUIRE(pair.second == 90);
+            }
+
+            WHEN("Incremented and dereferenced again") {
+                ++iter;
+                auto next_pair = *iter;
+
+                THEN("The next key-value pair is correctly accessed") {
+                    REQUIRE(next_pair.first == "Bob");
+                    REQUIRE(next_pair.second == 85);
+                }
+            }
+        }
+    }
+}
+
+SCENARIO("IterWrapper can be used to iterate through containers") {
+    GIVEN("A vector of doubles") {
+        std::vector<double> values = {1.5, 2.5, 3.5, 4.5};
+        tabiya::IterWrapper begin(values.begin());
+        tabiya::IterWrapper end(values.end());
+
+        WHEN("Used in a loop to compute sum") {
+            double sum = 0.0;
+            for (auto it = begin; it != end; ++it) {
+                sum += *it;
+            }
+
+            THEN("The sum is correctly calculated") {
+                REQUIRE(sum == 12.0);
+            }
+        }
+    }
+}
+
+SCENARIO("IterWrapper next() method works correctly") {
+    GIVEN("An IterWrapper on a string") {
+        std::string text = "hello";
+        tabiya::IterWrapper iter(text.begin());
+
+        WHEN("next() method is called") {
+            auto& advanced_iter = iter.next();
+
+            THEN("The iterator is advanced and can be dereferenced") {
+                REQUIRE(*advanced_iter == 'e');
+                REQUIRE(&advanced_iter == &iter); // Returns reference to self
+            }
+        }
+    }
+}
+
+SCENARIO("IterWrapper source() method works correctly") {
+    GIVEN("An IterWrapper on a vector") {
+        std::vector<int> numbers = {5, 10, 15};
+        tabiya::IterWrapper iter(numbers.begin());
+
+        WHEN("source() method is called") {
+            auto value = iter.source();
+
+            THEN("It returns the dereferenced value") {
+                REQUIRE(value == 5);
+            }
+
+            WHEN("The iterator is advanced") {
+                ++iter;
+                auto next_value = iter.source();
+
+                THEN("source() returns the new value") {
+                    REQUIRE(next_value == 10);
+                }
+            }
+        }
+    }
+}
+
 SCENARIO("IterWrapper works with custom Incrementor") {
     GIVEN("An IterWrapper with a CustomIncrementor") {
         int nums[] = {1, 2, 3};
@@ -135,6 +235,30 @@ TEST_CASE("Test with Standard Containers", "[iterwrapper]") {
     }
 }
 
+SCENARIO("IterWrapper works with integral types directly") {
+    GIVEN("An IterWrapper wrapping an integer") {
+        tabiya::IterWrapper<int> iter(5);
+
+        WHEN("Dereferenced") {
+            auto value = *iter;
+
+            THEN("It returns the integer itself") {
+                REQUIRE(value == 5);
+            }
+
+            WHEN("Incremented and dereferenced") {
+                ++iter;
+                auto next_value = *iter;
+
+                THEN("The integer is incremented") {
+                    REQUIRE(next_value == 6);
+                }
+            }
+        }
+    }
+}
+
+
 #pragma region algorithm
 TEST_CASE("Testing IterWrapper with std algorithms and ranges", "[IterWrapper]") {
     using namespace tabiya;
@@ -154,6 +278,23 @@ TEST_CASE("Testing IterWrapper with std algorithms and ranges", "[IterWrapper]")
         REQUIRE(*found == 3);
     }
 }
+
+SCENARIO("IterWrapper handles edge cases") {
+    GIVEN("An empty container") {
+        std::vector<int> empty;
+        tabiya::IterWrapper begin(empty.begin());
+        tabiya::IterWrapper end(empty.end());
+
+        WHEN("Compared") {
+            bool are_equal = !(begin != end);
+
+            THEN("Begin equals end") {
+                REQUIRE(are_equal);
+            }
+        }
+    }
+}
+
 
 #pragma endregion
 
