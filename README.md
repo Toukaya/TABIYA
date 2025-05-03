@@ -96,7 +96,7 @@ std::cout << std::endl;
 tabiya::Range<int, tabiya::DefaultIncrementor<int>, DoubleValueDereferencer> doubledRange;
 doubledRange.from(1).to(5);
 for (auto value : doubledRange) {
-    std::cout << value << " ";  // 2 4 6 8
+    std::cout << value << " ";  // 2 4
 }
 ```
 ## Core Components
@@ -166,7 +166,7 @@ tabiya::Range<int, tabiya::DefaultIncrementor<int>, SquareDereferencer> squaresR
 squaresRange.from(1).to(6);
 
 for (auto value : squaresRange) {
-    std::cout << value << " ";  // 1 4 9 16 25
+    std::cout << value << " ";  // 1 4
 }
 ```
 ## License
