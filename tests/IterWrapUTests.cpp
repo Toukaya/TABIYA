@@ -1,7 +1,6 @@
 //
 // Created by Touka on 7/21/24.
 //
-#define CATCH_CONFIG_MAIN
 #include <catch2/catch_all.hpp>
 #include "../src/IterWrapper.hpp"
 #include <vector>
@@ -297,11 +296,3 @@ SCENARIO("IterWrapper handles edge cases") {
 
 
 #pragma endregion
-
-int main(int argc, char* argv[]) {
-    Catch::Session session;
-
-    int result = session.run(argc, argv);
-
-    return result;
-}
