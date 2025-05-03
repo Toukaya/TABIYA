@@ -58,6 +58,21 @@ namespace tabiya {
     };
 
     template<typename T>
+    concept PrefixDecrementable = requires(T a) {
+        { --a } -> std::same_as<T&>;
+    };
+
+    template<typename T>
+    concept PostfixDecrementable = requires(T a) {
+        { a-- } -> std::same_as<T>;
+    };
+
+    template<typename T>
+    concept Bidirectional =
+    (PrefixIncrementable<T> || PostfixIncrementable<T>) &&
+    (PrefixDecrementable<T> || PostfixDecrementable<T>);
+
+    template<typename T>
     concept Numeric = std::is_arithmetic_v<T>;
 
     template<typename T>

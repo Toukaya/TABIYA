@@ -4,52 +4,93 @@
 #include "IterWrapper.hpp"
 
 namespace tabiya {
+    template<typename T>
+    struct RangeIncrementor {
+        explicit RangeIncrementor(bool ascending) : _ascending(ascending) {}
+        auto operator()(T& value) const -> decltype(auto) {
+            if (_ascending) {
+                if constexpr (PrefixDecrementable<T>)
+                    return --value;
+                else
+                    return value--;
+            } else {
+                if constexpr (PrefixIncrementable<T>)
+                    return ++value;
+                else
+                    return value++;
+            }
+        }
+    private:
+        bool _ascending;
+    };
+
+    template<typename T>
+    struct RangeEqualityComparator {
+        explicit RangeEqualityComparator(bool ascending) : _ascending(ascending) {}
+        constexpr auto operator()(T& left, T& right) const -> bool {
+            return _ascending ? (left <= right) : (left >= right);
+        }
+        constexpr auto operator()(const T& left, const T& right) const -> bool {
+            return _ascending ? (left <= right) : (left >= right);
+        }
+    private:
+        bool _ascending;
+    };
+
     template<
         typename T,
-        typename Incrementor = DefaultIncrementor<T>,
-        typename Dereferencer = DefaultDereferencer<T>
+        typename Incrementor = RangeIncrementor<T>,
+        typename Dereferencer = DefaultDereferencer<T>,
+        typename EqualityComparator = RangeEqualityComparator<T>
     >
-    requires GreaterThanComparable<T> && LessThanComparable<T> && InequalityComparable<T>
+    requires GreaterThanComparable<T> && LessThanComparable<T> && InequalityComparable<T> && Bidirectional<T>
     class Range {
     public:
-        using Iter = IterWrapper<T, Incrementor, Dereferencer>;
-
-        class Sentinel {
-        public:
-            constexpr Sentinel(T end, bool ascending) 
-                : _end(end), _ascending(ascending) {}
-
-            friend bool operator!=(const Iter& it, const Sentinel& sen)  {
-                const auto curr = *it;
-                return sen._ascending ? (curr < sen._end)
-                                       : (curr > sen._end);
-            }
-        private:
-            T     _end;
-            bool  _ascending;
-        };
+        using Iter = IterWrapper<T, Incrementor, Dereferencer, EqualityComparator>;
 
         Range() = default;
 
         Range& from(T start) {
-            _begin = Iter(start);
             _startVal = start;
             return *this;
         }
+
         Range& to(T end) {
+            _ascending = (_startVal >= end);
             _endVal = end;
-            _ascending = (_endVal >= _startVal);
             return *this;
         }
 
-        Iter     begin() const { return _begin; }
-        Sentinel end()   const { return Sentinel{_endVal, _ascending}; }
+        Iter begin() const { return makeIter(_startVal); }
+        Iter end()   const { return makeIter(_endVal);   }
 
     private:
-        Iter _begin{T{}};
         T    _startVal{};
         T    _endVal{};
         bool _ascending{true};
+
+        [[nodiscard]] Incrementor makeInc() const {
+            if constexpr (IsInstanceOf<RangeIncrementor, Incrementor>)
+                return Incrementor{_ascending};
+            else {
+                static_assert(std::is_default_constructible_v<Incrementor>);
+                return Incrementor{};
+            }
+        }
+
+        [[nodiscard]] EqualityComparator makeEq() const {
+            if constexpr (IsInstanceOf<RangeEqualityComparator, EqualityComparator>)
+                return EqualityComparator{_ascending};
+            else {
+                static_assert(std::is_default_constructible_v<EqualityComparator>);
+                return EqualityComparator{};
+            }
+        }
+
+        [[nodiscard]] Iter makeIter(T pos) const {
+            return Iter(pos, makeInc(), Dereferencer{}, makeEq());
+        }
+
     };
 } // namespace tabiya
 
