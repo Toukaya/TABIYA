@@ -4,38 +4,11 @@
 #include "IterWrapper.hpp"
 
 namespace tabiya {
-    template<typename T>
-    struct RangeIncrementor {
-        explicit RangeIncrementor(bool ascending) : _ascending(ascending) {}
-        auto operator()(T& value) const -> decltype(auto) {
-            if (_ascending) {
-                if constexpr (PrefixDecrementable<T>)
-                    return --value;
-                else
-                    return value--;
-            } else {
-                if constexpr (PrefixIncrementable<T>)
-                    return ++value;
-                else
-                    return value++;
-            }
-        }
-    private:
-        bool _ascending;
-    };
 
     template<typename T>
-    struct RangeEqualityComparator {
-        explicit RangeEqualityComparator(bool ascending) : _ascending(ascending) {}
-        constexpr auto operator()(T& left, T& right) const -> bool {
-            return _ascending ? (left <= right) : (left >= right);
-        }
-        constexpr auto operator()(const T& left, const T& right) const -> bool {
-            return _ascending ? (left <= right) : (left >= right);
-        }
-    private:
-        bool _ascending;
-    };
+    struct RangeIncrementor;
+    template<typename T>
+    struct RangeEqualityComparator;
 
     template<
         typename T,
@@ -62,14 +35,14 @@ namespace tabiya {
         }
 
         Iter begin() const { return makeIter(_startVal); }
-        Iter end()   const { return makeIter(_endVal);   }
+        Iter end() const { return makeIter(_endVal);   }
 
     private:
         T    _startVal{};
         T    _endVal{};
         bool _ascending{true};
 
-        [[nodiscard]] Incrementor makeInc() const {
+        [[nodiscard]] inline Incrementor makeInc() const {
             if constexpr (IsInstanceOf<RangeIncrementor, Incrementor>)
                 return Incrementor{_ascending};
             else {
@@ -78,7 +51,7 @@ namespace tabiya {
             }
         }
 
-        [[nodiscard]] EqualityComparator makeEq() const {
+        [[nodiscard]] inline EqualityComparator makeEq() const {
             if constexpr (IsInstanceOf<RangeEqualityComparator, EqualityComparator>)
                 return EqualityComparator{_ascending};
             else {
@@ -87,10 +60,43 @@ namespace tabiya {
             }
         }
 
-        [[nodiscard]] Iter makeIter(T pos) const {
+        [[nodiscard]] inline Iter makeIter(T pos) const {
             return Iter(pos, makeInc(), Dereferencer{}, makeEq());
         }
 
+    };
+
+    template<typename T>
+    struct RangeIncrementor {
+        explicit RangeIncrementor(bool ascending) : _ascending(ascending) {}
+        decltype(auto) operator()(T& value) const {
+            if (_ascending) {
+                if constexpr (PrefixDecrementable<T>)
+                    return --value;
+                else
+                    return value--;
+            } else {
+                if constexpr (PrefixIncrementable<T>)
+                    return ++value;
+                else
+                    return value++;
+            }
+        }
+    private:
+        bool _ascending;
+    };
+
+    template<typename T>
+    struct RangeEqualityComparator {
+        explicit RangeEqualityComparator(bool ascending) : _ascending(ascending) {}
+        constexpr bool operator()(T& left, T& right) const {
+            return _ascending ? (left <= right) : (left >= right);
+        }
+        constexpr bool operator()(const T& left, const T& right) const {
+            return _ascending ? (left <= right) : (left >= right);
+        }
+    private:
+        bool _ascending;
     };
 } // namespace tabiya
 

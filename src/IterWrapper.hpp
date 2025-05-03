@@ -14,7 +14,7 @@ namespace tabiya {
     template<typename  T>
     requires PrefixIncrementable<T> || PostfixIncrementable<T>
     struct DefaultIncrementor final {
-        auto operator()(T& value) const -> decltype(auto) {
+        decltype(auto) operator()(T& value) const {
             if constexpr (PrefixIncrementable<T>)
                 return ++value;
             else
@@ -25,14 +25,14 @@ namespace tabiya {
     template<typename T>
     requires Dereferenceable<T> || Numeric<T>
     struct DefaultDereferencer {
-        constexpr auto operator()(T &value) const -> decltype(auto) {
+        constexpr decltype(auto) operator()(T &value) const {
             if constexpr (Dereferenceable<T>) {
                 return *value;
             } else if constexpr (Numeric<T>) {
                 return value;
             }
         }
-        constexpr auto operator()(const T &value) const -> decltype(auto) {
+        constexpr decltype(auto) operator()(const T &value) const {
             if constexpr (Dereferenceable<T>) {
                 return *value;
             } else if constexpr (Numeric<T>) {
@@ -43,7 +43,7 @@ namespace tabiya {
 
     template<EqualityComparable T>
     struct DefaultEqualityComparator final {
-        constexpr auto operator()(T& left, T& right) const -> bool { return left == right; }
+        constexpr bool operator()(T& left, T& right) const { return left == right; }
     };
 
     template <template <typename...> class Template, typename >
@@ -64,6 +64,10 @@ namespace tabiya {
              std::is_invocable_v<Dereferencer, T&> &&
              std::is_invocable_v<EqualityComparator, T&, T&>
     class IterWrapper {
+        static constexpr bool UseDefInc = IsInstanceOf<DefaultIncrementor, Incrementor>;
+        static constexpr bool UseDefDrf = IsInstanceOf<DefaultDereferencer, Dereferencer>;
+        static constexpr bool UseDefCmp = IsInstanceOf<DefaultEqualityComparator, EqualityComparator>;
+
     public:
         using iterator_category = std::forward_iterator_tag;
         using value_type = std::remove_cvref_t<decltype(Dereferencer{}(std::declval<T&>()))>;
@@ -76,12 +80,9 @@ namespace tabiya {
                 std::default_initializable<Dereferencer> &&
                 std::default_initializable<EqualityComparator>)
         : _position(position) {
-            if constexpr (!IsInstanceOf<DefaultIncrementor, Incrementor>)
-                _incrementor = Incrementor{};
-            if constexpr (!IsInstanceOf<DefaultDereferencer, Dereferencer>)
-                _dereferencer = Dereferencer{};
-            if constexpr (!IsInstanceOf<DefaultEqualityComparator, EqualityComparator>)
-                _equalityComparator = EqualityComparator{};
+            if constexpr (!UseDefInc) _incrementor = Incrementor{};
+            if constexpr (!UseDefDrf) _dereferencer = Dereferencer{};
+            if constexpr (!UseDefCmp) _equalityComparator = EqualityComparator{};
         }
 
         template<
@@ -95,32 +96,32 @@ namespace tabiya {
                   _dereferencer(std::forward<Deref>(der)),
                   _equalityComparator(std::forward<EqCmp>(eq)) {}
 
-        auto operator*() -> decltype(auto) requires Dereferenceable<T> {
-            if constexpr (IsInstanceOf<DefaultDereferencer, Dereferencer>) {
+        decltype(auto) operator*() requires Dereferenceable<T> {
+            if constexpr (UseDefDrf) {
                 return *_position;
             } else {
                 return _dereferencer(_position);
             }
         }
 
-        auto operator*() -> decltype(auto) requires (not Dereferenceable<T>) {
+        decltype(auto) operator*() requires (not Dereferenceable<T>) {
             return _dereferencer(_position);
         }
 
-        auto operator*() const -> decltype(auto) requires Dereferenceable<T> {
-            if constexpr (IsInstanceOf<DefaultDereferencer, Dereferencer>) {
+        decltype(auto) operator*() const requires Dereferenceable<T> {
+            if constexpr (UseDefDrf) {
                 return *_position;
             } else {
                 return _dereferencer(_position);
             }
         }
 
-        auto operator*() const -> decltype(auto) requires (not Dereferenceable<T>) {
+        decltype(auto) operator*() const requires (not Dereferenceable<T>) {
             return _dereferencer(_position);
         }
 
         auto operator++() -> decltype(*this) {
-            if constexpr (IsInstanceOf<DefaultIncrementor, Incrementor>) {
+            if constexpr (UseDefInc) {
                 ++_position;
             } else {
                 _incrementor(_position);
@@ -129,7 +130,7 @@ namespace tabiya {
         }
 
         bool operator!=(const IterWrapper& other) const {
-            if constexpr (IsInstanceOf<DefaultEqualityComparator, EqualityComparator>) {
+            if constexpr (UseDefCmp) {
                 return _position != other._position;
             } else {
                 return not _equalityComparator(_position, other._position);
@@ -140,11 +141,11 @@ namespace tabiya {
             return ++(*this);
         }
 
-        auto source() -> decltype(auto) {
+        decltype(auto) source() {
             return *(*this);
         }
 
-        auto source() const -> decltype(auto) {
+        decltype(auto) source() const {
             return *(*this);
         }
 
