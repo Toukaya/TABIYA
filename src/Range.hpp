@@ -1,5 +1,5 @@
-#ifndef TABIYA_HPP
-#define TABIYA_HPP
+#ifndef RANGE_HPP
+#define RANGE_HPP
 
 #include "IterWrapper.hpp"
 
@@ -100,4 +100,4 @@ namespace tabiya {
     };
 } // namespace tabiya
 
-#endif // TABIYA_HPP
+#endif // RANGE_HPP
