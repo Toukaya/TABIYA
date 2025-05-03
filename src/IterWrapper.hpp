@@ -104,7 +104,7 @@ namespace tabiya {
             }
         }
 
-        decltype(auto) operator*() requires (not Dereferenceable<T>) {
+        decltype(auto) operator*() requires (!Dereferenceable<T>) {
             return _dereferencer(_position);
         }
 
@@ -116,7 +116,7 @@ namespace tabiya {
             }
         }
 
-        decltype(auto) operator*() const requires (not Dereferenceable<T>) {
+        decltype(auto) operator*() const requires (!Dereferenceable<T>) {
             return _dereferencer(_position);
         }
 
@@ -133,7 +133,7 @@ namespace tabiya {
             if constexpr (UseDefCmp) {
                 return _position != other._position;
             } else {
-                return not _equalityComparator(_position, other._position);
+                return !_equalityComparator(_position, other._position);
             }
         }
 
@@ -151,9 +151,9 @@ namespace tabiya {
 
     private:
         T _position;
-        Incrementor _incrementor;
-        Dereferencer _dereferencer;
-        EqualityComparator _equalityComparator;
+        [[no_unique_address]]Incrementor _incrementor;
+        [[no_unique_address]]Dereferencer _dereferencer;
+        [[no_unique_address]]EqualityComparator _equalityComparator;
     };
 } // tabiya
 

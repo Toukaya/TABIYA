@@ -189,7 +189,7 @@ SCENARIO("Times with custom types that meet requirements", "[Times]") {
     };
 
     GIVEN("A Times object with custom numeric type") {
-        tabiya::Times<CustomNumber> times(CustomNumber(3));
+        tabiya::Times times(CustomNumber(3));
 
         WHEN("Iterating through values") {
             std::vector<int> values;
