@@ -23,19 +23,19 @@ namespace tabiya {
     };
 
     template<typename T>
-    requires Dereferenceable<T> || IsIntegral<T>
+    requires Dereferenceable<T> || Numeric<T>
     struct DefaultDereferencer {
         constexpr auto operator()(T &value) const -> decltype(auto) {
             if constexpr (Dereferenceable<T>) {
                 return *value;
-            } else if constexpr (IsIntegral<T>) {
+            } else if constexpr (Numeric<T>) {
                 return value;
             }
         }
         constexpr auto operator()(const T &value) const -> decltype(auto) {
             if constexpr (Dereferenceable<T>) {
                 return *value;
-            } else if constexpr (IsIntegral<T>) {
+            } else if constexpr (Numeric<T>) {
                 return value;
             }
         }
@@ -77,11 +77,13 @@ namespace tabiya {
             if constexpr (IsInstanceOf<DefaultDereferencer, Dereferencer>) {
                 return *_position;
             } else {
+                static_assert(std::default_initializable<Dereferencer>);
                 return Dereferencer{}(_position);
             }
         }
 
         auto operator*() -> decltype(auto) requires (not Dereferenceable<T>) {
+            static_assert(std::default_initializable<Dereferencer>);
             return Dereferencer{}(_position);
         }
 
@@ -89,11 +91,13 @@ namespace tabiya {
             if constexpr (IsInstanceOf<DefaultDereferencer, Dereferencer>) {
                 return *_position;
             } else {
+                static_assert(std::default_initializable<Dereferencer>);
                 return Dereferencer{}(_position);
             }
         }
 
         auto operator*() const -> decltype(auto) requires (not Dereferenceable<T>) {
+            static_assert(std::default_initializable<Dereferencer>);
             return Dereferencer{}(_position);
         }
 
@@ -101,6 +105,7 @@ namespace tabiya {
             if constexpr (IsInstanceOf<DefaultIncrementor, Incrementor>) {
                 ++_position;
             } else {
+                static_assert(std::default_initializable<Incrementor>);
                 Incrementor{}(_position);
             }
             return *this;
@@ -110,6 +115,7 @@ namespace tabiya {
             if constexpr (IsInstanceOf<DefaultEqualityComparator, EqualityComparator>) {
                 return _position != other._position;
             } else {
+                static_assert(std::default_initializable<EqualityComparator>);
                 return not EqualityComparator{}(_position, other._position);
             }
         }
@@ -119,6 +125,10 @@ namespace tabiya {
         }
 
         auto source() -> decltype(auto) {
+            return *(*this);
+        }
+
+        auto source() const -> decltype(auto) {
             return *(*this);
         }
 
