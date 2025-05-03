@@ -40,6 +40,11 @@ namespace tabiya {
     };
 
     template<typename T>
+    concept GreaterEqualityComparable = requires(T a, T b) {
+        { a >= b } -> std::same_as<bool>;
+    };
+
+    template<typename T>
     concept Equalable = EqualityComparable<T> && InequalityComparable<T>;
 
     template<typename T>

@@ -9,8 +9,18 @@
 #include "concepts/concept.hpp"
 
 namespace tabiya {
+    template<typename T>
+    requires GreaterEqualityComparable<T>
+    struct TimesEqualityComparator {
+        constexpr auto operator()(T& left, T& right) const -> bool {
+            return left >= right;
+        }
+        constexpr auto operator()(const T& left, const T& right) const -> bool {
+            return left >= right;
+        }
+    };
+
     template <typename T>
-    requires Addable<T> && Equalable<T>
     class Times {
     public:
         explicit Times(T count) : _count(count) {
@@ -21,10 +31,10 @@ namespace tabiya {
             }
         }
 
-        using Iter = IterWrapper<T, DefaultIncrementor<T>, decltype([](T value) {return value;})>;
+        using Iter = IterWrapper<T, DefaultIncrementor<T>, decltype([](T value) {return value;}), TimesEqualityComparator<T>>;
 
         auto begin() const -> Iter {
-            return Iter{0};
+            return Iter{T(0)};
         }
 
         auto end() const -> Iter {
