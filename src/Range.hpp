@@ -1,49 +1,56 @@
-//
-// Created by Touka on 7/22/24.
-//
-
 #ifndef TABIYA_HPP
 #define TABIYA_HPP
+
 #include "IterWrapper.hpp"
 
 namespace tabiya {
     template<
         typename T,
         typename Incrementor = DefaultIncrementor<T>,
-        typename Dereferencer = DefaultDereferencer<T>,
-        typename Comparator = DefaultEqualityComparator<T>
+        typename Dereferencer = DefaultDereferencer<T>
     >
+    requires GreaterThanComparable<T> && LessThanComparable<T> && InequalityComparable<T>
     class Range {
     public:
+        using Iter = IterWrapper<T, Incrementor, Dereferencer>;
 
-        using Iter = IterWrapper<T, Incrementor, Dereferencer, Comparator>;
+        class Sentinel {
+        public:
+            constexpr Sentinel(T end, bool ascending) 
+                : _end(end), _ascending(ascending) {}
 
-        Range() : _curr(T{}), _end(T{}) {}
+            friend bool operator!=(const Iter& it, const Sentinel& sen)  {
+                const auto curr = *it;
+                return sen._ascending ? (curr < sen._end)
+                                       : (curr > sen._end);
+            }
+        private:
+            T     _end;
+            bool  _ascending;
+        };
 
-        explicit Range(const Iter &begin, const Iter &end) : _curr(begin), _end(end) {}
+        Range() = default;
 
-        auto from(T start) -> decltype(*this) {
-            _curr = Iter(start);
+        Range& from(T start) {
+            _begin = Iter(start);
+            _startVal = start;
+            return *this;
+        }
+        Range& to(T end) {
+            _endVal = end;
+            _ascending = (_endVal >= _startVal);
             return *this;
         }
 
-        auto to(T end) -> decltype(*this) {
-            _end = Iter(end);
-            return *this;
-        }
-
-        auto begin() const -> Iter {
-            return _curr;
-        }
-
-        auto end() const -> Iter {
-            return _end;
-        }
+        Iter     begin() const { return _begin; }
+        Sentinel end()   const { return Sentinel{_endVal, _ascending}; }
 
     private:
-        Iter _curr;
-        Iter _end;
+        Iter _begin{T{}};
+        T    _startVal{};
+        T    _endVal{};
+        bool _ascending{true};
     };
-} // tabiya
+} // namespace tabiya
 
-#endif //TABIYA_HPP
+#endif // TABIYA_HPP

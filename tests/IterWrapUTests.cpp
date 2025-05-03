@@ -6,6 +6,7 @@
 #include "../src/IterWrapper.hpp"
 #include <vector>
 #include <list>
+#include <numeric>
 
 SCENARIO("IterWrapper increments and dereferences correctly with default behaviors") {
     GIVEN("A vector of integers") {

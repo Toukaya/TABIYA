@@ -25,6 +25,16 @@ namespace tabiya {
     };
 
     template<typename T>
+    concept GreaterThanComparable = requires(T a, T b) {
+        { a > b } -> std::same_as<bool>;
+    };
+
+    template<typename T>
+    concept LessThanComparable = requires(T a, T b) {
+        { a < b } -> std::same_as<bool>;
+    };
+
+    template<typename T>
     concept InequalityComparable = requires(T a, T b) {
         { a != b } -> std::same_as<bool>;
     };

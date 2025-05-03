@@ -48,8 +48,8 @@ SCENARIO("Range works with custom incrementors") {
 
         WHEN("Iterated over") {
             std::vector<int> results;
-            for(auto it = customRange.begin(); it != customRange.end(); ++it) {
-                results.push_back(*it);
+            for(auto && it : customRange) {
+                results.push_back(it);
             }
 
             THEN("The results are incremented by 2 each step") {

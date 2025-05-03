@@ -32,6 +32,13 @@ namespace tabiya {
                 return value;
             }
         }
+        constexpr auto operator()(const T &value) const -> decltype(auto) {
+            if constexpr (Dereferenceable<T>) {
+                return *value;
+            } else if constexpr (IsIntegral<T>) {
+                return value;
+            }
+        }
     };
 
     template<EqualityComparable T>
@@ -75,6 +82,18 @@ namespace tabiya {
         }
 
         auto operator*() -> decltype(auto) requires (not Dereferenceable<T>) {
+            return Dereferencer{}(_position);
+        }
+
+        auto operator*() const -> decltype(auto) requires Dereferenceable<T> {
+            if constexpr (IsInstanceOf<DefaultDereferencer, Dereferencer>) {
+                return *_position;
+            } else {
+                return Dereferencer{}(_position);
+            }
+        }
+
+        auto operator*() const -> decltype(auto) requires (not Dereferenceable<T>) {
             return Dereferencer{}(_position);
         }
 
