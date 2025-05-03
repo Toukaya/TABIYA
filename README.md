@@ -15,7 +15,7 @@ Tabiya is a modern C++ library that provides elegant abstractions for range-base
 
 ## Usage Examples
 ### Iterator Wrapper
-The class provides a flexible wrapper around any iterator-like type: `IterWrapper`
+The `IterWrapper` class provides a flexible wrapper around any iterator-like type:
 ``` cpp
 #include <tabiya/IterWrapper.hpp>
 #include <vector>
@@ -34,7 +34,7 @@ for (auto it = begin; it != end; ++it) {
 }
 ```
 ### Range
-The class provides a way to iterate over a sequence of values: `Range`
+The `Range` class provides a way to iterate over a sequence of values:
 ``` cpp
 #include <tabiya/Range.hpp>
 #include <iostream>
@@ -52,7 +52,7 @@ for (auto value : tabiya::Range<int>{}.from(10).to(5)) {
 }
 ```
 ### Times
-The class provides a convenient way to repeat an operation a specific number of times: `Times`
+The `Times` class provides a convenient way to repeat an operation a specific number of times: 
 ``` cpp
 #include <tabiya/Times.hpp>
 #include <iostream>
