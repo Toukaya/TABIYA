@@ -191,7 +191,7 @@ SCENARIO("Range integrates with STL algorithms") {
         }
 
         WHEN("Used with std::count_if to count even numbers") {
-            int count = std::count_if(range.begin(), range.end(), [](int n) { return n % 2 == 0; });
+            auto count = std::count_if(range.begin(), range.end(), [](int n) { return n % 2 == 0; });
 
             THEN("The count is correct") {
                 REQUIRE(count == 4); // 2, 4, 6, 8 are even
@@ -199,38 +199,6 @@ SCENARIO("Range integrates with STL algorithms") {
         }
     }
 }
-
-//SCENARIO("Range works with custom types that satisfy the requirements") {
-//    struct CustomType {
-//        int value;
-//
-//        explicit CustomType(int v);
-//        explicit CustomType();
-//
-//        bool operator<(const CustomType& other) const { return value < other.value; }
-//        bool operator>(const CustomType& other) const { return value > other.value; }
-//        bool operator==(const CustomType& other) const { return value == other.value; }
-//        int operator*() const { return value; }
-//
-//        CustomType& operator++() { ++value; return *this; }
-//    };
-//
-//    GIVEN("A Range of CustomType") {
-//        tabiya::Range<CustomType> range;
-//        range.from(CustomType(1)).to(CustomType(5));
-//
-//        WHEN("Iterating over the range") {
-//            std::vector<int> results;
-//            for (auto ct : range) {
-//                results.push_back(ct);
-//            }
-//
-//            THEN("The values are processed correctly") {
-//                REQUIRE(results == std::vector<int>{1, 2, 3, 4});
-//            }
-//        }
-//    }
-//}
 
 SCENARIO("Range can be used to create sequences for containers") {
     GIVEN("A Range from 1 to 5") {
