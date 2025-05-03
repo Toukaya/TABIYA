@@ -71,42 +71,59 @@ namespace tabiya {
         using reference = value_type&;
         using difference_type = std::ptrdiff_t;
 
-        explicit IterWrapper(T position) : _position(position) {}
+        explicit IterWrapper(T position) requires (
+                std::default_initializable<Incrementor> &&
+                std::default_initializable<Dereferencer> &&
+                std::default_initializable<EqualityComparator>)
+        : _position(position) {
+            if constexpr (!IsInstanceOf<DefaultIncrementor, Incrementor>)
+                _incrementor = Incrementor{};
+            if constexpr (!IsInstanceOf<DefaultDereferencer, Dereferencer>)
+                _dereferencer = Dereferencer{};
+            if constexpr (!IsInstanceOf<DefaultEqualityComparator, EqualityComparator>)
+                _equalityComparator = EqualityComparator{};
+        }
+
+        template<
+                typename Inc  = Incrementor,
+                typename Deref = Dereferencer,
+                typename EqCmp = EqualityComparator
+        >
+        [[maybe_unused]] explicit IterWrapper(T position,Inc&&  inc,Deref&& der,EqCmp&& eq)
+                : _position(position),
+                  _incrementor(std::forward<Inc>(inc)),
+                  _dereferencer(std::forward<Deref>(der)),
+                  _equalityComparator(std::forward<EqCmp>(eq)) {}
 
         auto operator*() -> decltype(auto) requires Dereferenceable<T> {
             if constexpr (IsInstanceOf<DefaultDereferencer, Dereferencer>) {
                 return *_position;
             } else {
-                static_assert(std::default_initializable<Dereferencer>);
-                return Dereferencer{}(_position);
+                return _dereferencer(_position);
             }
         }
 
         auto operator*() -> decltype(auto) requires (not Dereferenceable<T>) {
-            static_assert(std::default_initializable<Dereferencer>);
-            return Dereferencer{}(_position);
+            return _dereferencer(_position);
         }
 
         auto operator*() const -> decltype(auto) requires Dereferenceable<T> {
             if constexpr (IsInstanceOf<DefaultDereferencer, Dereferencer>) {
                 return *_position;
             } else {
-                static_assert(std::default_initializable<Dereferencer>);
-                return Dereferencer{}(_position);
+                return _dereferencer(_position);
             }
         }
 
         auto operator*() const -> decltype(auto) requires (not Dereferenceable<T>) {
-            static_assert(std::default_initializable<Dereferencer>);
-            return Dereferencer{}(_position);
+            return _dereferencer(_position);
         }
 
         auto operator++() -> decltype(*this) {
             if constexpr (IsInstanceOf<DefaultIncrementor, Incrementor>) {
                 ++_position;
             } else {
-                static_assert(std::default_initializable<Incrementor>);
-                Incrementor{}(_position);
+                _incrementor(_position);
             }
             return *this;
         }
@@ -115,8 +132,7 @@ namespace tabiya {
             if constexpr (IsInstanceOf<DefaultEqualityComparator, EqualityComparator>) {
                 return _position != other._position;
             } else {
-                static_assert(std::default_initializable<EqualityComparator>);
-                return not EqualityComparator{}(_position, other._position);
+                return not _equalityComparator(_position, other._position);
             }
         }
 
@@ -134,6 +150,9 @@ namespace tabiya {
 
     private:
         T _position;
+        Incrementor _incrementor;
+        Dereferencer _dereferencer;
+        EqualityComparator _equalityComparator;
     };
 } // tabiya
 
